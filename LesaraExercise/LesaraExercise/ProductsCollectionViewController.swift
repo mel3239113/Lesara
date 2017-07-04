@@ -12,23 +12,21 @@ private let reuseIdentifier = "ProductCollectionViewCell"
 
 class ProductsCollectionViewController: UICollectionViewController {
 
-    var products : [Product]  = []
-    
+    var products                : [Product]  = []
+    var pageNumber              : Int = 1
+    var updating                = false
     override func viewDidLoad() {
         super.viewDidLoad()
         
-       
-        // Register cell classes
         self.collectionView!.register(ProductCollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-
         self.networkCall()
-        // Do any additional setup after loading the view.
     }
 
     
     func networkCall(){
         
-        let url = URL(string: Constants.urlString)
+        let url = URL(string: "\(Constants.urlString)\(self.pageNumber)")
+        self.updating = true
         URLSession.shared.dataTask(with: url!, completionHandler: {
             (data, response, error) in
             if(error != nil){
@@ -42,6 +40,7 @@ class ProductsCollectionViewController: UICollectionViewController {
 
                     OperationQueue.main.addOperation({
                         self.collectionView?.reloadData()
+                        self.updating = false
                     })
                     
                 }catch let error as NSError{
@@ -50,13 +49,14 @@ class ProductsCollectionViewController: UICollectionViewController {
             }
         }).resume()
         
-        
     }
     
     func extractData(data : TrendingProductResponse){
         
-       self.products = data.productList.products
-        
+        var currentPage = Int(data.currentPage)
+        currentPage = currentPage! + 1
+        self.pageNumber = currentPage!
+        self.products.append(contentsOf: data.productList.products)
     }
 
     override func didReceiveMemoryWarning() {
@@ -83,37 +83,20 @@ class ProductsCollectionViewController: UICollectionViewController {
         return cell
     }
     
-    // MARK: UICollectionViewDelegate
-
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
+    override func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        print(indexPath.row)
+        
+        let maxItems = self.products.count
+        if(indexPath.row > maxItems - Constants.updateThreshold){
+            if(updating == false){
+                
+                self.networkCall()
+            }
+        }
     }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
     
-    }
-    */
-
+    // Called when the cell is displayed
+    
 }
 
 extension ProductsCollectionViewController : UICollectionViewDelegateFlowLayout {

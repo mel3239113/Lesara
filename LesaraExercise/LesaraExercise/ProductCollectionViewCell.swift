@@ -58,15 +58,11 @@ class ProductCollectionViewCell: UICollectionViewCell {
         let session = URLSession(configuration: .default)
 
         let downloadPicTask = session.dataTask(with: imageURL) { (data, response, error) in
-            if let e = error {
-            }
-            else{
-                if let res = response as? HTTPURLResponse {
-                    if let imageData = data {
-                        let image = UIImage(data: imageData)
-                        DispatchQueue.main.async {
-                            self.imageView.image = image
-                        }
+          if let res = response as? HTTPURLResponse {
+                if let imageData = data {
+                    let image = UIImage(data: imageData)
+                    DispatchQueue.main.async {
+                        self.imageView.image = image
                     }
                 }
             }

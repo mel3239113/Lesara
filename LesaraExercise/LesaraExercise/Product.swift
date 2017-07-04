@@ -43,11 +43,7 @@ struct Product {
         self.price = NSDecimalNumber(string: price)
         self.discount = discount
         self.thumbnailPath = thumbnail
-        
     }
-    
-    
-    
 }
 
 struct ProductList {
